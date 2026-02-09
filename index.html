@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>インスタ投稿キャプション生成くん</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
+        body { font-family: 'Noto Sans JP', sans-serif; }
+        .loading-spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #4F46E5;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen pb-12">
+
+    <!-- Header -->
+    <nav class="bg-white shadow-sm border-b px-4 py-4 mb-6">
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-bold text-gray-800">📸 インスタ投稿生成ツール</h1>
+            <div class="flex gap-2">
+                <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-xs bg-orange-100 text-orange-700 px-3 py-2 rounded-lg hover:bg-orange-200 transition">
+                    🔑 API取得
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto px-4">
+        
+        <!-- API Setting Section -->
+        <section id="api-section" class="bg-white p-6 rounded-2xl shadow-sm border mb-6">
+            <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+                ⚙️ 初期設定
+            </h2>
+            <div class="flex flex-col sm:flex-row gap-3">
+                <input type="password" id="api-key-input" placeholder="Google Gemini APIキーを入力してください" 
+                    class="flex-1 border border-gray-300 rounded-xl px-4 py-2 focus:ring-2 focus:ring-indigo-500 outline-none">
+                <button id="save-api-btn" class="bg-indigo-600 text-white px-6 py-2 rounded-xl hover:bg-indigo-700 transition font-medium">
+                    キーを保存
+                </button>
+            </div>
+            <p id="api-status" class="mt-2 text-sm text-gray-500 italic"></p>
+        </section>
+
+        <!-- Main Input Form -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <!-- Input Side -->
+            <section class="bg-white p-6 rounded-2xl shadow-sm border">
+                <h2 class="text-lg font-bold mb-4">🏠 店舗情報入力</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">店名 (必須)</label>
+                        <input type="text" id="shop-name" placeholder="例：梅田 カフェ 〇〇" 
+                            class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">補足情報 (任意)</label>
+                        <textarea id="additional-info" rows="3" placeholder="例：限定のパフェが有名。内装がオシャレなど" 
+                            class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none"></textarea>
+                    </div>
+                    <button id="generate-btn" class="w-full bg-gradient-to-r from-pink-500 to-indigo-600 text-white font-bold py-4 rounded-xl shadow-lg hover:opacity-90 transition transform active:scale-95 flex justify-center items-center gap-2">
+                        <span>🚀 ネットで調査して作成</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Output Side -->
+            <section class="bg-white p-6 rounded-2xl shadow-sm border flex flex-col min-h-[400px]">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold">📝 生成結果</h2>
+                    <button id="copy-btn" class="text-sm bg-gray-100 text-gray-600 px-3 py-1 rounded-md hover:bg-gray-200 active:bg-gray-300 disabled:opacity-50">
+                        📋 コピペ
+                    </button>
+                </div>
+                
+                <div id="loading-area" class="hidden flex-1 flex flex-col items-center justify-center text-gray-500">
+                    <div class="loading-spinner mb-4"></div>
+                    <p>ネットの情報を調査中...</p>
+                </div>
+
+                <div id="output-area" class="flex-1">
+                    <textarea id="result-text" readonly 
+                        class="w-full h-full min-h-[300px] bg-gray-50 border-none resize-none p-4 rounded-xl text-gray-800 leading-relaxed text-sm focus:outline-none"
+                        placeholder="ここに生成されたキャプションが表示されます"></textarea>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Message Toast -->
+    <div id="toast" class="fixed bottom-10 left-1/2 transform -translate-x-1/2 bg-black text-white px-6 py-3 rounded-full shadow-2xl transition-opacity opacity-0 pointer-events-none z-50">
+        コピーしました！
+    </div>
+
+    <script>
+        // Constants & State
+        const STORAGE_KEY = 'GEMINI_API_KEY_INSTA_GEN';
+        const MODEL_NAME = 'gemini-2.5-flash-preview-09-2025';
+        let apiKey = localStorage.getItem(STORAGE_KEY) || "";
+
+        // Elements
+        const apiKeyInput = document.getElementById('api-key-input');
+        const saveApiBtn = document.getElementById('save-api-btn');
+        const apiStatus = document.getElementById('api-status');
+        const shopNameInput = document.getElementById('shop-name');
+        const additionalInfoInput = document.getElementById('additional-info');
+        const generateBtn = document.getElementById('generate-btn');
+        const resultText = document.getElementById('result-text');
+        const loadingArea = document.getElementById('loading-area');
+        const outputArea = document.getElementById('output-area');
+        const copyBtn = document.getElementById('copy-btn');
+        const toast = document.getElementById('toast');
+
+        // Init
+        if (apiKey) {
+            apiKeyInput.value = apiKey;
+            apiStatus.textContent = "✅ APIキーは保存されています";
+        }
+
+        // Actions
+        saveApiBtn.onclick = () => {
+            const val = apiKeyInput.value.trim();
+            if (val) {
+                apiKey = val;
+                localStorage.setItem(STORAGE_KEY, val);
+                apiStatus.textContent = "✅ APIキーを保存しました";
+                showToast("保存完了");
+            }
+        };
+
+        copyBtn.onclick = () => {
+            if (!resultText.value) return;
+            resultText.select();
+            document.execCommand('copy');
+            showToast("クリップボードにコピーしました！");
+        };
+
+        function showToast(msg) {
+            toast.textContent = msg;
+            toast.classList.remove('opacity-0');
+            setTimeout(() => toast.classList.add('opacity-0'), 2000);
+        }
+
+        async function generateCaption() {
+            if (!apiKey) {
+                alert("先にAPIキーを設定・保存してください。");
+                return;
+            }
+            if (!shopNameInput.value.trim()) {
+                alert("店名を入力してください。");
+                return;
+            }
+
+            // UI State
+            loadingArea.classList.remove('hidden');
+            outputArea.classList.add('hidden');
+            generateBtn.disabled = true;
+
+            const shopName = shopNameInput.value.trim();
+            const addInfo = additionalInfoInput.value.trim();
+
+            const systemPrompt = `あなたは関西のグルメ情報を発信するインスタグラマーです。
+Google検索ツールを使用して、提供された店名について以下の情報を調査し、指定されたフォーマットでキャプションを作成してください。
+
+【調査項目】
+1. 店の正確な名称
+2. 正確な住所
+3. 営業時間（最新情報）
+4. 最寄り駅
+5. ネット上の口コミ（SNSや食べログ等の感想を親しみやすい文章で150文字程度に要約）
+
+【出力フォーマット】
+もし気になったら保存をタップ！
+次の投稿も気になったらフォローお願いします🔥
+→＠kansai_gurme_alco
+
+[ここにネットの口コミまとめ文を記載]
+--------------------------------------------
+📍店情報
+店名：[店名]
+住所：[住所]
+営業：[営業時間]
+最寄：[最寄り駅]
+--------------------------------------------
+関西のグルメ情報を発信中！
+居酒屋、カフェ、菓子系、会食に利用できるお店を紹介！
+↓
+＠kansai_gurme_alco
+
+【注意事項】
+- 「[ここにネットの口コミまとめ文を記載]」などのプレースホルダーは必ず実際の情報に置き換えてください。
+- 分からない項目がある場合は、不自然な回答は避け、空欄にせず「調査中」や「要確認」としてください。
+- 日本語で出力してください。`;
+
+            const userQuery = `店名: ${shopName}\n補足情報: ${addInfo}`;
+
+            try {
+                const response = await fetchWithRetry(
+                    `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${apiKey}`,
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: userQuery }] }],
+                            systemInstruction: { parts: [{ text: systemPrompt }] },
+                            tools: [{ google_search: {} }]
+                        })
+                    }
+                );
+
+                const data = await response.json();
+                const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (text) {
+                    resultText.value = text.trim();
+                } else {
+                    throw new Error("生成に失敗しました。");
+                }
+
+            } catch (error) {
+                console.error(error);
+                resultText.value = "エラーが発生しました：\n" + error.message;
+            } finally {
+                loadingArea.classList.add('hidden');
+                outputArea.classList.remove('hidden');
+                generateBtn.disabled = false;
+            }
+        }
+
+        async function fetchWithRetry(url, options, retries = 5) {
+            let delay = 1000;
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const res = await fetch(url, options);
+                    if (res.ok) return res;
+                    if (res.status === 429 || res.status >= 500) {
+                        // Rate limit or server error, retry
+                    } else {
+                        const errData = await res.json();
+                        throw new Error(errData.error?.message || "リクエストエラー");
+                    }
+                } catch (e) {
+                    if (i === retries - 1) throw e;
+                }
+                await new Promise(r => setTimeout(r, delay));
+                delay *= 2;
+            }
+        }
+
+        generateBtn.onclick = generateCaption;
+
+    </script>
+</body>
+</html>
