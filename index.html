@@ -3,131 +3,125 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>インスタ投稿キャプション生成くん V2</title>
+    <title>インスタ投稿キャプション生成くん V3</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
         body { font-family: 'Noto Sans JP', sans-serif; }
         .loading-spinner {
             border: 4px solid rgba(0, 0, 0, 0.1);
-            width: 36px;
-            height: 36px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
-            border-left-color: #E11D48;
+            border-left-color: #F43F5E;
             animation: spin 1s linear infinite;
         }
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        textarea::-webkit-scrollbar {
+            width: 8px;
+        }
+        textarea::-webkit-scrollbar-thumb {
+            background: #e2e8f0;
+            border-radius: 4px;
+        }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen pb-12 text-gray-800">
+<body class="bg-gray-50 min-h-screen text-gray-800">
 
-    <!-- Header -->
-    <nav class="bg-white shadow-sm border-b px-4 py-4 mb-6 sticky top-0 z-10">
-        <div class="max-w-5xl mx-auto flex justify-between items-center">
+    <nav class="bg-white shadow-sm border-b px-6 py-4 sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
             <h1 class="text-xl font-bold bg-gradient-to-r from-rose-500 to-orange-500 bg-clip-text text-transparent">
-                📸 インスタ投稿生成 V2
+                📸 インスタ投稿生成 V3
             </h1>
-            <div class="flex gap-2">
-                <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-xs bg-gray-800 text-white px-3 py-2 rounded-lg hover:bg-gray-700 transition">
+            <div class="flex items-center gap-3">
+                <a href="https://aistudio.google.com/app/apikey" target="_blank" class="hidden sm:block text-xs bg-gray-100 text-gray-600 px-3 py-2 rounded-lg hover:bg-gray-200 transition">
                     APIキー取得
                 </a>
+                <button id="copy-btn" class="bg-rose-500 text-white px-5 py-2 rounded-xl hover:bg-rose-600 transition font-bold text-sm shadow-md">
+                    コピー
+                </button>
             </div>
         </div>
     </nav>
 
-    <main class="max-w-5xl mx-auto px-4">
-        
-        <!-- API Setting Section -->
-        <section id="api-section" class="bg-white p-5 rounded-2xl shadow-sm border mb-6">
-            <div class="flex flex-col sm:flex-row gap-3 items-center">
-                <div class="flex-1 w-full">
-                    <input type="password" id="api-key-input" placeholder="Google Gemini APIキーを入力" 
-                        class="w-full border border-gray-300 rounded-xl px-4 py-2 focus:ring-2 focus:ring-rose-500 outline-none">
-                </div>
-                <button id="save-api-btn" class="w-full sm:w-auto bg-gray-800 text-white px-6 py-2 rounded-xl hover:bg-black transition font-medium">
-                    キーを保存
-                </button>
-            </div>
-            <p id="api-status" class="mt-2 text-xs text-gray-500"></p>
-        </section>
-
-        <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+    <main class="max-w-6xl mx-auto px-4 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
             
-            <!-- Left: Input Form (2 cols) -->
-            <section class="lg:col-span-2 space-y-6">
-                <div class="bg-white p-6 rounded-2xl shadow-sm border">
-                    <h2 class="text-lg font-bold mb-4 flex items-center gap-2">🏠 店舗・調査設定</h2>
-                    
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">店名（場所＋店名がおすすめ）</label>
-                            <input type="text" id="shop-name" placeholder="例：心斎橋 焼肉 〇〇" 
-                                class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-rose-500 outline-none">
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">注文メニュー・調査要望</label>
-                            <textarea id="menu-request" rows="3" placeholder="例：特上ロースと冷麺。値段や肉の質感を詳しく。ランチのコスパはどう？" 
-                                class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-rose-500 outline-none"></textarea>
-                            <p class="text-[10px] text-gray-400 mt-1">※メニューの具体的な感想や価格帯をAIが重点調査します</p>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">その他補足（任意）</label>
-                            <input type="text" id="additional-info" placeholder="例：デートにおすすめ等" 
-                                class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-rose-500 outline-none">
-                        </div>
-
-                        <button id="generate-btn" class="w-full bg-gradient-to-r from-rose-500 to-orange-500 text-white font-bold py-4 rounded-xl shadow-lg hover:opacity-90 transition transform active:scale-95 flex justify-center items-center gap-2">
-                            <span>🚀 調査を開始する</span>
+            <!-- Left Panel -->
+            <div class="lg:col-span-5 space-y-6">
+                <!-- API Section -->
+                <div class="bg-white p-5 rounded-3xl shadow-sm border">
+                    <label class="block text-xs font-bold text-gray-400 uppercase mb-2 ml-1">Google Gemini API Key</label>
+                    <div class="flex gap-2">
+                        <input type="password" id="api-key-input" placeholder="APIキーを入力" 
+                            class="flex-1 border border-gray-200 rounded-2xl px-4 py-2 text-sm focus:ring-2 focus:ring-rose-500 outline-none">
+                        <button id="save-api-btn" class="bg-gray-800 text-white px-4 py-2 rounded-2xl hover:bg-black transition text-sm">
+                            保存
                         </button>
                     </div>
                 </div>
-            </section>
 
-            <!-- Right: Output Area (3 cols) -->
-            <section class="lg:col-span-3">
-                <div class="bg-white p-6 rounded-2xl shadow-sm border h-full flex flex-col min-h-[600px]">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-lg font-bold">📝 生成されたキャプション</h2>
-                        <button id="copy-btn" class="bg-rose-50 text-rose-600 px-4 py-2 rounded-xl hover:bg-rose-100 transition font-bold flex items-center gap-2">
-                            <span>📋 コピペする</span>
-                        </button>
-                    </div>
+                <!-- Input Form -->
+                <div class="bg-white p-6 rounded-3xl shadow-sm border space-y-5">
+                    <h2 class="text-lg font-bold border-l-4 border-rose-500 pl-3">店舗・メニュー調査</h2>
                     
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">店名</label>
+                        <input type="text" id="shop-name" placeholder="例：守口 立ち呑み ヨッコイショ" 
+                            class="w-full border border-gray-200 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-rose-500 outline-none transition">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">食べたもの・調査メニュー</label>
+                        <textarea id="menu-request" rows="4" placeholder="例：肉刺し盛り、燻製3種盛り、肝刺し。値段と味の感想を詳しく！" 
+                            class="w-full border border-gray-200 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-rose-500 outline-none transition"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">補足（店の雰囲気の要望など）</label>
+                        <input type="text" id="additional-info" placeholder="例：ウッディでお洒落な感じ" 
+                            class="w-full border border-gray-200 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-rose-500 outline-none transition">
+                    </div>
+
+                    <button id="generate-btn" class="w-full bg-gradient-to-br from-rose-500 to-orange-500 text-white font-bold py-4 rounded-2xl shadow-lg hover:shadow-xl transition transform active:scale-[0.98] flex justify-center items-center gap-2">
+                        <span>🚀 ネット調査を開始</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Panel (Output) -->
+            <div class="lg:col-span-7">
+                <div class="bg-white p-6 rounded-3xl shadow-sm border h-full flex flex-col min-h-[700px]">
                     <div id="loading-area" class="hidden flex-1 flex flex-col items-center justify-center text-gray-500">
-                        <div class="loading-spinner mb-4"></div>
-                        <p class="font-medium">Google検索で最新情報を調査中...</p>
-                        <p class="text-xs mt-2 text-gray-400">これには15〜30秒ほどかかる場合があります</p>
+                        <div class="loading-spinner mb-6"></div>
+                        <p class="text-lg font-bold text-gray-700">最新情報をリサーチ中...</p>
+                        <p class="text-sm mt-2 text-gray-400 text-center">メニューの価格や口コミを分析しています。<br>15〜30秒ほどお待ちください。</p>
                     </div>
 
-                    <div id="output-area" class="flex-1">
+                    <div id="output-area" class="flex-1 flex flex-col">
                         <textarea id="result-text" readonly 
-                            class="w-full h-full min-h-[500px] bg-gray-50 border-none resize-none p-5 rounded-xl text-gray-800 leading-relaxed text-sm focus:outline-none"
-                            placeholder="店舗名を入力してボタンを押してください"></textarea>
+                            class="w-full flex-1 bg-gray-50 border-none resize-none p-6 rounded-2xl text-gray-800 leading-relaxed text-[15px] focus:outline-none"
+                            placeholder="ここに自動生成された文章が表示されます"></textarea>
                     </div>
                 </div>
-            </section>
+            </div>
         </div>
     </main>
 
-    <!-- Toast Notification -->
     <div id="toast" class="fixed bottom-10 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white px-8 py-3 rounded-full shadow-2xl transition-opacity opacity-0 pointer-events-none z-50">
         コピーしました！
     </div>
 
     <script>
-        const STORAGE_KEY = 'GEMINI_API_KEY_INSTA_V2';
+        const STORAGE_KEY = 'GEMINI_API_KEY_INSTA_V3';
         const MODEL_NAME = 'gemini-2.5-flash-preview-09-2025';
         let apiKey = localStorage.getItem(STORAGE_KEY) || "";
 
-        // UI Elements
         const apiKeyInput = document.getElementById('api-key-input');
         const saveApiBtn = document.getElementById('save-api-btn');
-        const apiStatus = document.getElementById('api-status');
         const shopNameInput = document.getElementById('shop-name');
         const menuRequestInput = document.getElementById('menu-request');
         const additionalInfoInput = document.getElementById('additional-info');
@@ -138,19 +132,12 @@
         const copyBtn = document.getElementById('copy-btn');
         const toast = document.getElementById('toast');
 
-        if (apiKey) {
-            apiKeyInput.value = apiKey;
-            apiStatus.textContent = "✅ APIキー設定済み";
-        }
+        if (apiKey) apiKeyInput.value = apiKey;
 
         saveApiBtn.onclick = () => {
-            const val = apiKeyInput.value.trim();
-            if (val) {
-                apiKey = val;
-                localStorage.setItem(STORAGE_KEY, val);
-                apiStatus.textContent = "✅ キーを保存しました";
-                showToast("APIキーを保存しました");
-            }
+            apiKey = apiKeyInput.value.trim();
+            localStorage.setItem(STORAGE_KEY, apiKey);
+            showToast("APIキーを保存しました");
         };
 
         copyBtn.onclick = () => {
@@ -167,14 +154,8 @@
         }
 
         async function generateCaption() {
-            if (!apiKey) {
-                alert("APIキーを保存してから実行してください。");
-                return;
-            }
-            if (!shopNameInput.value.trim()) {
-                alert("店名を入力してください。");
-                return;
-            }
+            if (!apiKey) return alert("APIキーを設定してください。");
+            if (!shopNameInput.value.trim()) return alert("店名を入力してください。");
 
             loadingArea.classList.remove('hidden');
             outputArea.classList.add('hidden');
@@ -184,16 +165,20 @@
             const menuReq = menuRequestInput.value.trim();
             const addInfo = additionalInfoInput.value.trim();
 
-            const systemPrompt = `あなたは関西のグルメ情報を紹介するプロのインスタグラマー「＠kansai_gurme_alco」です。
-Google検索を使用し、指定された店舗とメニューについて最新情報を調査し、最高品質のキャプションを作成してください。
+            const systemPrompt = `あなたは関西の人気グルメアカウント「＠kansai_gurme_alco」のライターです。
+Google検索を駆使して、店舗情報と指定されたメニューの最新価格・口コミを調査し、以下のフォーマットで出力してください。
 
-### 調査・執筆のルール
-1. 【感想】欄は、実際に食べた人の口コミやブログから表現を拾ってください。「美味しい」という言葉を避け、「口の中でとろける」「スパイスの香りが鼻を抜ける」「外はカリッと、中はジュワッと」などの具体的でシズル感のある表現を多用し、長めに書いてください。
-2. 要望にある「メニュー名」については、価格やそのメニュー特有のこだわりを重点的に調べて反映させてください。
-3. 【客層】は、どのような層が多いか（例：20代女子、サラリーマン、お一人様など）を分析し、3つの箇条書きで出してください。
-4. 【雰囲気】は、店内がどのような感じか1行〜2行で簡潔に。
-5. 【オススメポイント】は、その店の強みを3つ、🔸を使って表現してください。
-6. 最後に、その店に関連するトレンドのハッシュタグを5つ追加してください。
+### 文章作成のルール
+- 口調：親しみやすく、少し感情が漏れ出るような「関西のグルメ好き」らしいトーン（〜やで、〜すぎる、〜良き☺️ 等）。
+- 【感想】欄：
+    1. まず「今回いただいたメニュー👇」として、調査したメニュー名と価格をリスト形式（・メニュー名　〇〇円）で記載してください。価格はネット上の最新情報を反映させてください。
+    2. その後、各メニューを【メニュー名】で囲み、味の感想を詳しく書いてください。
+    3. 「美味しい」の代わりに「脂が噛むたびに溢れる」「香りが鼻を抜ける」「鮮度の良さが一口でわかる」など、味の情景が浮かぶ表現を使ってください。
+    4. 適度に改行を入れ、スマホで読みやすくしてください。
+- 【客層】：ネットの口コミから分析し、3つの箇条書きで。
+- 【雰囲気】：店の内装や活気を簡潔に。
+- 【オススメポイント】：🔸を使い、その店の強みを3つ。
+- ハッシュタグ：最後に関連タグを5つ。
 
 ### 出力フォーマット
 もし気になったら保存をタップ！
@@ -201,12 +186,25 @@ Google検索を使用し、指定された店舗とメニューについて最�
 →@kansai_gurme_alco
 
 【オススメポイント】
-🔸[ポイント1]
-🔸[ポイント2]
-🔸[ポイント3]
+🔸
+🔸
+🔸
 
 【感想】
-[ここに長文のシズル感ある感想を記載。ネットの口コミを分析した具体的な表現を使うこと。]
+[ここに店全体の雰囲気や居心地を一言。例：店内はウッディで明るく〜]
+
+今回いただいたメニュー👇
+・[メニュー1]　[価格]
+・[メニュー2]　[価格]
+...
+
+【[メニュー1]】
+[具体的でシズル感のある感想]
+
+【[メニュー2]】
+[具体的でシズル感のある感想]
+
+[締めの一言。例：また行きたくなる〜]
 
 【客層】
 ・
@@ -214,22 +212,22 @@ Google検索を使用し、指定された店舗とメニューについて最�
 ・
 
 【雰囲気】
-[簡潔に記載]
+
 
 ———————————————
 📍店情報
 店名：[店名]
-住所：[住所]
-営業：[営業時間]
+住所：[正確な住所]
+営業：[営業時間（定休日含む）]
 ———————————————
 関西のグルメ情報を発信中！
 居酒屋、カフェ、菓子系、会食に利用できるお店を紹介！
 ↓
 @kansai_gurme_alco
 
-#[タグ1] #[タグ2] #[タグ3] #[タグ4] #[タグ5]`;
+#タグ1 #タグ2 #タグ3 #タグ4 #タグ5`;
 
-            const userQuery = `店名: ${shopName}\n要望/メニュー: ${menuReq}\n補足: ${addInfo}`;
+            const userQuery = `店名: ${shopName}\n食べたメニュー/調べたいこと: ${menuReq}\n補足: ${addInfo}`;
 
             try {
                 const response = await fetchWithRetry(
@@ -247,16 +245,13 @@ Google検索を使用し、指定された店舗とメニューについて最�
 
                 const data = await response.json();
                 const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
                 if (text) {
                     resultText.value = text.trim();
                 } else {
-                    throw new Error("生成に失敗しました。内容を確認してください。");
+                    throw new Error("生成に失敗しました。");
                 }
-
             } catch (error) {
-                console.error(error);
-                resultText.value = "エラーが発生しました：\n" + error.message;
+                resultText.value = "エラー: " + error.message;
             } finally {
                 loadingArea.classList.add('hidden');
                 outputArea.classList.remove('hidden');
@@ -270,11 +265,9 @@ Google検索を使用し、指定された店舗とメニューについて最�
                 try {
                     const res = await fetch(url, options);
                     if (res.ok) return res;
-                    if (res.status === 429 || res.status >= 500) {
-                        // Retry
-                    } else {
-                        const errData = await res.json();
-                        throw new Error(errData.error?.message || "通信エラー");
+                    if (res.status !== 429 && res.status < 500) {
+                        const err = await res.json();
+                        throw new Error(err.error?.message || "エラー");
                     }
                 } catch (e) {
                     if (i === retries - 1) throw e;
