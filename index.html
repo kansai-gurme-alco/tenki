@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>インスタ投稿キャプション生成くん</title>
+    <title>インスタ投稿キャプション生成くん V2</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
@@ -13,7 +13,7 @@
             width: 36px;
             height: 36px;
             border-radius: 50%;
-            border-left-color: #4F46E5;
+            border-left-color: #E11D48;
             animation: spin 1s linear infinite;
         }
         @keyframes spin {
@@ -22,99 +22,114 @@
         }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen pb-12">
+<body class="bg-gray-50 min-h-screen pb-12 text-gray-800">
 
     <!-- Header -->
-    <nav class="bg-white shadow-sm border-b px-4 py-4 mb-6">
-        <div class="max-w-4xl mx-auto flex justify-between items-center">
-            <h1 class="text-xl font-bold text-gray-800">📸 インスタ投稿生成ツール</h1>
+    <nav class="bg-white shadow-sm border-b px-4 py-4 mb-6 sticky top-0 z-10">
+        <div class="max-w-5xl mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-bold bg-gradient-to-r from-rose-500 to-orange-500 bg-clip-text text-transparent">
+                📸 インスタ投稿生成 V2
+            </h1>
             <div class="flex gap-2">
-                <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-xs bg-orange-100 text-orange-700 px-3 py-2 rounded-lg hover:bg-orange-200 transition">
-                    🔑 API取得
+                <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-xs bg-gray-800 text-white px-3 py-2 rounded-lg hover:bg-gray-700 transition">
+                    APIキー取得
                 </a>
             </div>
         </div>
     </nav>
 
-    <main class="max-w-4xl mx-auto px-4">
+    <main class="max-w-5xl mx-auto px-4">
         
         <!-- API Setting Section -->
-        <section id="api-section" class="bg-white p-6 rounded-2xl shadow-sm border mb-6">
-            <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
-                ⚙️ 初期設定
-            </h2>
-            <div class="flex flex-col sm:flex-row gap-3">
-                <input type="password" id="api-key-input" placeholder="Google Gemini APIキーを入力してください" 
-                    class="flex-1 border border-gray-300 rounded-xl px-4 py-2 focus:ring-2 focus:ring-indigo-500 outline-none">
-                <button id="save-api-btn" class="bg-indigo-600 text-white px-6 py-2 rounded-xl hover:bg-indigo-700 transition font-medium">
+        <section id="api-section" class="bg-white p-5 rounded-2xl shadow-sm border mb-6">
+            <div class="flex flex-col sm:flex-row gap-3 items-center">
+                <div class="flex-1 w-full">
+                    <input type="password" id="api-key-input" placeholder="Google Gemini APIキーを入力" 
+                        class="w-full border border-gray-300 rounded-xl px-4 py-2 focus:ring-2 focus:ring-rose-500 outline-none">
+                </div>
+                <button id="save-api-btn" class="w-full sm:w-auto bg-gray-800 text-white px-6 py-2 rounded-xl hover:bg-black transition font-medium">
                     キーを保存
                 </button>
             </div>
-            <p id="api-status" class="mt-2 text-sm text-gray-500 italic"></p>
+            <p id="api-status" class="mt-2 text-xs text-gray-500"></p>
         </section>
 
-        <!-- Main Input Form -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
             
-            <!-- Input Side -->
-            <section class="bg-white p-6 rounded-2xl shadow-sm border">
-                <h2 class="text-lg font-bold mb-4">🏠 店舗情報入力</h2>
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">店名 (必須)</label>
-                        <input type="text" id="shop-name" placeholder="例：梅田 カフェ 〇〇" 
-                            class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none">
+            <!-- Left: Input Form (2 cols) -->
+            <section class="lg:col-span-2 space-y-6">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border">
+                    <h2 class="text-lg font-bold mb-4 flex items-center gap-2">🏠 店舗・調査設定</h2>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">店名（場所＋店名がおすすめ）</label>
+                            <input type="text" id="shop-name" placeholder="例：心斎橋 焼肉 〇〇" 
+                                class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-rose-500 outline-none">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">注文メニュー・調査要望</label>
+                            <textarea id="menu-request" rows="3" placeholder="例：特上ロースと冷麺。値段や肉の質感を詳しく。ランチのコスパはどう？" 
+                                class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-rose-500 outline-none"></textarea>
+                            <p class="text-[10px] text-gray-400 mt-1">※メニューの具体的な感想や価格帯をAIが重点調査します</p>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">その他補足（任意）</label>
+                            <input type="text" id="additional-info" placeholder="例：デートにおすすめ等" 
+                                class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-rose-500 outline-none">
+                        </div>
+
+                        <button id="generate-btn" class="w-full bg-gradient-to-r from-rose-500 to-orange-500 text-white font-bold py-4 rounded-xl shadow-lg hover:opacity-90 transition transform active:scale-95 flex justify-center items-center gap-2">
+                            <span>🚀 調査を開始する</span>
+                        </button>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">補足情報 (任意)</label>
-                        <textarea id="additional-info" rows="3" placeholder="例：限定のパフェが有名。内装がオシャレなど" 
-                            class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none"></textarea>
-                    </div>
-                    <button id="generate-btn" class="w-full bg-gradient-to-r from-pink-500 to-indigo-600 text-white font-bold py-4 rounded-xl shadow-lg hover:opacity-90 transition transform active:scale-95 flex justify-center items-center gap-2">
-                        <span>🚀 ネットで調査して作成</span>
-                    </button>
                 </div>
             </section>
 
-            <!-- Output Side -->
-            <section class="bg-white p-6 rounded-2xl shadow-sm border flex flex-col min-h-[400px]">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-lg font-bold">📝 生成結果</h2>
-                    <button id="copy-btn" class="text-sm bg-gray-100 text-gray-600 px-3 py-1 rounded-md hover:bg-gray-200 active:bg-gray-300 disabled:opacity-50">
-                        📋 コピペ
-                    </button>
-                </div>
-                
-                <div id="loading-area" class="hidden flex-1 flex flex-col items-center justify-center text-gray-500">
-                    <div class="loading-spinner mb-4"></div>
-                    <p>ネットの情報を調査中...</p>
-                </div>
+            <!-- Right: Output Area (3 cols) -->
+            <section class="lg:col-span-3">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border h-full flex flex-col min-h-[600px]">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-bold">📝 生成されたキャプション</h2>
+                        <button id="copy-btn" class="bg-rose-50 text-rose-600 px-4 py-2 rounded-xl hover:bg-rose-100 transition font-bold flex items-center gap-2">
+                            <span>📋 コピペする</span>
+                        </button>
+                    </div>
+                    
+                    <div id="loading-area" class="hidden flex-1 flex flex-col items-center justify-center text-gray-500">
+                        <div class="loading-spinner mb-4"></div>
+                        <p class="font-medium">Google検索で最新情報を調査中...</p>
+                        <p class="text-xs mt-2 text-gray-400">これには15〜30秒ほどかかる場合があります</p>
+                    </div>
 
-                <div id="output-area" class="flex-1">
-                    <textarea id="result-text" readonly 
-                        class="w-full h-full min-h-[300px] bg-gray-50 border-none resize-none p-4 rounded-xl text-gray-800 leading-relaxed text-sm focus:outline-none"
-                        placeholder="ここに生成されたキャプションが表示されます"></textarea>
+                    <div id="output-area" class="flex-1">
+                        <textarea id="result-text" readonly 
+                            class="w-full h-full min-h-[500px] bg-gray-50 border-none resize-none p-5 rounded-xl text-gray-800 leading-relaxed text-sm focus:outline-none"
+                            placeholder="店舗名を入力してボタンを押してください"></textarea>
+                    </div>
                 </div>
             </section>
         </div>
     </main>
 
-    <!-- Message Toast -->
-    <div id="toast" class="fixed bottom-10 left-1/2 transform -translate-x-1/2 bg-black text-white px-6 py-3 rounded-full shadow-2xl transition-opacity opacity-0 pointer-events-none z-50">
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-10 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white px-8 py-3 rounded-full shadow-2xl transition-opacity opacity-0 pointer-events-none z-50">
         コピーしました！
     </div>
 
     <script>
-        // Constants & State
-        const STORAGE_KEY = 'GEMINI_API_KEY_INSTA_GEN';
+        const STORAGE_KEY = 'GEMINI_API_KEY_INSTA_V2';
         const MODEL_NAME = 'gemini-2.5-flash-preview-09-2025';
         let apiKey = localStorage.getItem(STORAGE_KEY) || "";
 
-        // Elements
+        // UI Elements
         const apiKeyInput = document.getElementById('api-key-input');
         const saveApiBtn = document.getElementById('save-api-btn');
         const apiStatus = document.getElementById('api-status');
         const shopNameInput = document.getElementById('shop-name');
+        const menuRequestInput = document.getElementById('menu-request');
         const additionalInfoInput = document.getElementById('additional-info');
         const generateBtn = document.getElementById('generate-btn');
         const resultText = document.getElementById('result-text');
@@ -123,20 +138,18 @@
         const copyBtn = document.getElementById('copy-btn');
         const toast = document.getElementById('toast');
 
-        // Init
         if (apiKey) {
             apiKeyInput.value = apiKey;
-            apiStatus.textContent = "✅ APIキーは保存されています";
+            apiStatus.textContent = "✅ APIキー設定済み";
         }
 
-        // Actions
         saveApiBtn.onclick = () => {
             const val = apiKeyInput.value.trim();
             if (val) {
                 apiKey = val;
                 localStorage.setItem(STORAGE_KEY, val);
-                apiStatus.textContent = "✅ APIキーを保存しました";
-                showToast("保存完了");
+                apiStatus.textContent = "✅ キーを保存しました";
+                showToast("APIキーを保存しました");
             }
         };
 
@@ -144,7 +157,7 @@
             if (!resultText.value) return;
             resultText.select();
             document.execCommand('copy');
-            showToast("クリップボードにコピーしました！");
+            showToast("コピーしました！");
         };
 
         function showToast(msg) {
@@ -155,7 +168,7 @@
 
         async function generateCaption() {
             if (!apiKey) {
-                alert("先にAPIキーを設定・保存してください。");
+                alert("APIキーを保存してから実行してください。");
                 return;
             }
             if (!shopNameInput.value.trim()) {
@@ -163,48 +176,60 @@
                 return;
             }
 
-            // UI State
             loadingArea.classList.remove('hidden');
             outputArea.classList.add('hidden');
             generateBtn.disabled = true;
 
             const shopName = shopNameInput.value.trim();
+            const menuReq = menuRequestInput.value.trim();
             const addInfo = additionalInfoInput.value.trim();
 
-            const systemPrompt = `あなたは関西のグルメ情報を発信するインスタグラマーです。
-Google検索ツールを使用して、提供された店名について以下の情報を調査し、指定されたフォーマットでキャプションを作成してください。
+            const systemPrompt = `あなたは関西のグルメ情報を紹介するプロのインスタグラマー「＠kansai_gurme_alco」です。
+Google検索を使用し、指定された店舗とメニューについて最新情報を調査し、最高品質のキャプションを作成してください。
 
-【調査項目】
-1. 店の正確な名称
-2. 正確な住所
-3. 営業時間（最新情報）
-4. 最寄り駅
-5. ネット上の口コミ（SNSや食べログ等の感想を親しみやすい文章で150文字程度に要約）
+### 調査・執筆のルール
+1. 【感想】欄は、実際に食べた人の口コミやブログから表現を拾ってください。「美味しい」という言葉を避け、「口の中でとろける」「スパイスの香りが鼻を抜ける」「外はカリッと、中はジュワッと」などの具体的でシズル感のある表現を多用し、長めに書いてください。
+2. 要望にある「メニュー名」については、価格やそのメニュー特有のこだわりを重点的に調べて反映させてください。
+3. 【客層】は、どのような層が多いか（例：20代女子、サラリーマン、お一人様など）を分析し、3つの箇条書きで出してください。
+4. 【雰囲気】は、店内がどのような感じか1行〜2行で簡潔に。
+5. 【オススメポイント】は、その店の強みを3つ、🔸を使って表現してください。
+6. 最後に、その店に関連するトレンドのハッシュタグを5つ追加してください。
 
-【出力フォーマット】
+### 出力フォーマット
 もし気になったら保存をタップ！
 次の投稿も気になったらフォローお願いします🔥
-→＠kansai_gurme_alco
+→@kansai_gurme_alco
 
-[ここにネットの口コミまとめ文を記載]
---------------------------------------------
+【オススメポイント】
+🔸[ポイント1]
+🔸[ポイント2]
+🔸[ポイント3]
+
+【感想】
+[ここに長文のシズル感ある感想を記載。ネットの口コミを分析した具体的な表現を使うこと。]
+
+【客層】
+・
+・
+・
+
+【雰囲気】
+[簡潔に記載]
+
+———————————————
 📍店情報
 店名：[店名]
 住所：[住所]
 営業：[営業時間]
-最寄：[最寄り駅]
---------------------------------------------
+———————————————
 関西のグルメ情報を発信中！
 居酒屋、カフェ、菓子系、会食に利用できるお店を紹介！
 ↓
-＠kansai_gurme_alco
+@kansai_gurme_alco
 
-【注意事項】
-- 「[ここにネットの口コミまとめ文を記載]」などのプレースホルダーは必ず実際の情報に置き換えてください。
-- 分からない項目がある場合は、不自然な回答は避け、空欄にせず「調査中」や「要確認」としてください。
-- 日本語で出力してください。`;
+#[タグ1] #[タグ2] #[タグ3] #[タグ4] #[タグ5]`;
 
-            const userQuery = `店名: ${shopName}\n補足情報: ${addInfo}`;
+            const userQuery = `店名: ${shopName}\n要望/メニュー: ${menuReq}\n補足: ${addInfo}`;
 
             try {
                 const response = await fetchWithRetry(
@@ -226,7 +251,7 @@ Google検索ツールを使用して、提供された店名について以下�
                 if (text) {
                     resultText.value = text.trim();
                 } else {
-                    throw new Error("生成に失敗しました。");
+                    throw new Error("生成に失敗しました。内容を確認してください。");
                 }
 
             } catch (error) {
@@ -246,10 +271,10 @@ Google検索ツールを使用して、提供された店名について以下�
                     const res = await fetch(url, options);
                     if (res.ok) return res;
                     if (res.status === 429 || res.status >= 500) {
-                        // Rate limit or server error, retry
+                        // Retry
                     } else {
                         const errData = await res.json();
-                        throw new Error(errData.error?.message || "リクエストエラー");
+                        throw new Error(errData.error?.message || "通信エラー");
                     }
                 } catch (e) {
                     if (i === retries - 1) throw e;
@@ -260,7 +285,7 @@ Google検索ツールを使用して、提供された店名について以下�
         }
 
         generateBtn.onclick = generateCaption;
-
     </script>
 </body>
 </html>
+
