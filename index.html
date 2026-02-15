@@ -32,16 +32,17 @@
 <body class="bg-gray-50 min-h-screen text-gray-800">
 
     <nav class="bg-white shadow-sm border-b px-6 py-4 sticky top-0 z-50">
-        <div class="max-w-6xl mx-auto flex justify-between items-center">
+        <div class="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
             <h1 class="text-xl font-bold bg-gradient-to-r from-rose-500 to-orange-500 bg-clip-text text-transparent">
                 📸 インスタ投稿生成 V3
             </h1>
             <div class="flex items-center gap-3">
-                <a href="https://aistudio.google.com/app/apikey" target="_blank" class="hidden sm:block text-xs bg-gray-100 text-gray-600 px-3 py-2 rounded-lg hover:bg-gray-200 transition">
-                    APIキー取得
+                <!-- API取得ボタンを分かりやすく修正 -->
+                <a href="https://aistudio.google.com/app/apikey" target="_blank" class="bg-orange-500 text-white px-5 py-2 rounded-xl hover:bg-orange-600 transition font-bold text-sm shadow-md flex items-center gap-2">
+                    🔑 APIキーを取得しに行く
                 </a>
-                <button id="copy-btn" class="bg-rose-500 text-white px-5 py-2 rounded-xl hover:bg-rose-600 transition font-bold text-sm shadow-md">
-                    コピー
+                <button id="copy-btn" class="bg-gray-100 text-gray-700 px-5 py-2 rounded-xl hover:bg-gray-200 transition font-bold text-sm">
+                    📋 コピペ
                 </button>
             </div>
         </div>
@@ -52,13 +53,13 @@
             
             <!-- Left Panel -->
             <div class="lg:col-span-5 space-y-6">
-                <!-- API Section -->
+                <!-- API Setting Section -->
                 <div class="bg-white p-5 rounded-3xl shadow-sm border">
-                    <label class="block text-xs font-bold text-gray-400 uppercase mb-2 ml-1">Google Gemini API Key</label>
+                    <label class="block text-xs font-bold text-gray-400 uppercase mb-2 ml-1">APIキーをここで保存</label>
                     <div class="flex gap-2">
-                        <input type="password" id="api-key-input" placeholder="APIキーを入力" 
+                        <input type="password" id="api-key-input" placeholder="取得したキーをここに貼り付け" 
                             class="flex-1 border border-gray-200 rounded-2xl px-4 py-2 text-sm focus:ring-2 focus:ring-rose-500 outline-none">
-                        <button id="save-api-btn" class="bg-gray-800 text-white px-4 py-2 rounded-2xl hover:bg-black transition text-sm">
+                        <button id="save-api-btn" class="bg-gray-800 text-white px-4 py-2 rounded-2xl hover:bg-black transition text-sm whitespace-nowrap">
                             保存
                         </button>
                     </div>
@@ -66,7 +67,7 @@
 
                 <!-- Input Form -->
                 <div class="bg-white p-6 rounded-3xl shadow-sm border space-y-5">
-                    <h2 class="text-lg font-bold border-l-4 border-rose-500 pl-3">店舗・メニュー調査</h2>
+                    <h2 class="text-lg font-bold border-l-4 border-rose-500 pl-3 text-gray-700">店舗・メニュー調査</h2>
                     
                     <div>
                         <label class="block text-sm font-bold text-gray-700 mb-2">店名</label>
@@ -75,8 +76,8 @@
                     </div>
 
                     <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-2">食べたもの・調査メニュー</label>
-                        <textarea id="menu-request" rows="4" placeholder="例：肉刺し盛り、燻製3種盛り、肝刺し。値段と味の感想を詳しく！" 
+                        <label class="block text-sm font-bold text-gray-700 mb-2">食べたもの・調査要望</label>
+                        <textarea id="menu-request" rows="4" placeholder="例：肉刺し盛り、燻製3種盛り。値段と味の感想を詳しく！" 
                             class="w-full border border-gray-200 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-rose-500 outline-none transition"></textarea>
                     </div>
 
@@ -104,14 +105,14 @@
                     <div id="output-area" class="flex-1 flex flex-col">
                         <textarea id="result-text" readonly 
                             class="w-full flex-1 bg-gray-50 border-none resize-none p-6 rounded-2xl text-gray-800 leading-relaxed text-[15px] focus:outline-none"
-                            placeholder="ここに自動生成された文章が表示されます"></textarea>
+                            placeholder="店舗名を入力してボタンを押してください"></textarea>
                     </div>
                 </div>
             </div>
         </div>
     </main>
 
-    <div id="toast" class="fixed bottom-10 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white px-8 py-3 rounded-full shadow-2xl transition-opacity opacity-0 pointer-events-none z-50">
+    <div id="toast" class="fixed bottom-10 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white px-8 py-3 rounded-full shadow-2xl transition-opacity opacity-0 pointer-events-none z-50 text-sm">
         コピーしました！
     </div>
 
@@ -136,15 +137,18 @@
 
         saveApiBtn.onclick = () => {
             apiKey = apiKeyInput.value.trim();
-            localStorage.setItem(STORAGE_KEY, apiKey);
-            showToast("APIキーを保存しました");
+            if (apiKey) {
+                localStorage.setItem(STORAGE_KEY, apiKey);
+                showToast("APIキーを保存しました");
+            }
         };
 
         copyBtn.onclick = () => {
             if (!resultText.value) return;
             resultText.select();
+            // iFrame制約のためdocument.execCommandを使用
             document.execCommand('copy');
-            showToast("コピーしました！");
+            showToast("クリップボードにコピーしました！");
         };
 
         function showToast(msg) {
@@ -154,7 +158,7 @@
         }
 
         async function generateCaption() {
-            if (!apiKey) return alert("APIキーを設定してください。");
+            if (!apiKey) return alert("APIキーを保存してから実行してください。");
             if (!shopNameInput.value.trim()) return alert("店名を入力してください。");
 
             loadingArea.classList.remove('hidden');
@@ -165,20 +169,21 @@
             const menuReq = menuRequestInput.value.trim();
             const addInfo = additionalInfoInput.value.trim();
 
-            const systemPrompt = `あなたは関西の人気グルメアカウント「＠kansai_gurme_alco」のライターです。
-Google検索を駆使して、店舗情報と指定されたメニューの最新価格・口コミを調査し、以下のフォーマットで出力してください。
+            const systemPrompt = `あなたは関西の人気グルメアカウント「＠kansai_gurme_alco」の専属ライターです。
+Google検索を使用し、店舗情報と指定されたメニューの最新価格・口コミを徹底調査し、指定フォーマットで出力してください。
 
 ### 文章作成のルール
-- 口調：親しみやすく、少し感情が漏れ出るような「関西のグルメ好き」らしいトーン（〜やで、〜すぎる、〜良き☺️ 等）。
-- 【感想】欄：
-    1. まず「今回いただいたメニュー👇」として、調査したメニュー名と価格をリスト形式（・メニュー名　〇〇円）で記載してください。価格はネット上の最新情報を反映させてください。
-    2. その後、各メニューを【メニュー名】で囲み、味の感想を詳しく書いてください。
-    3. 「美味しい」の代わりに「脂が噛むたびに溢れる」「香りが鼻を抜ける」「鮮度の良さが一口でわかる」など、味の情景が浮かぶ表現を使ってください。
-    4. 適度に改行を入れ、スマホで読みやすくしてください。
-- 【客層】：ネットの口コミから分析し、3つの箇条書きで。
-- 【雰囲気】：店の内装や活気を簡潔に。
-- 【オススメポイント】：🔸を使い、その店の強みを3つ。
-- ハッシュタグ：最後に関連タグを5つ。
+- 口調：親しみやすく、感情豊かな「関西のグルメ垢」トーン（〜やで、〜すぎる、〜良き☺️ 等）。
+- 【感想】欄の構成：
+    1. 店全体の雰囲気（ウッディ、お洒落、活気がある等）を一言。
+    2. 「今回いただいたメニュー👇」と記載し、調査したメニュー名と価格を「・メニュー名　〇〇円」の形式でリスト化。
+    3. その後、各メニューを【メニュー名】で囲み、味・食感・香りをシズル感たっぷりに描写。
+    4. 「美味しい」は禁止。「脂の旨味が押し寄せる」「口の中が幸せ」「鼻に抜ける香りが最高」等の具体的な情景描写。
+    5. スマホで読みやすいよう適宜改行。
+- 【客層】：口コミを分析し、ターゲット層を3つ箇条書き。
+- 【雰囲気】：店の内装や居心地を簡潔に。
+- 【オススメポイント】：🔸を使い3つ。
+- ハッシュタグ：最後に関連するハッシュタグを5つ。
 
 ### 出力フォーマット
 もし気になったら保存をタップ！
@@ -191,7 +196,7 @@ Google検索を駆使して、店舗情報と指定されたメニューの最�
 🔸
 
 【感想】
-[ここに店全体の雰囲気や居心地を一言。例：店内はウッディで明るく〜]
+[雰囲気の一言]
 
 今回いただいたメニュー👇
 ・[メニュー1]　[価格]
@@ -204,7 +209,7 @@ Google検索を駆使して、店舗情報と指定されたメニューの最�
 【[メニュー2]】
 [具体的でシズル感のある感想]
 
-[締めの一言。例：また行きたくなる〜]
+[締めの一言。文章を書いててお腹が空くような表現]
 
 【客層】
 ・
@@ -227,7 +232,7 @@ Google検索を駆使して、店舗情報と指定されたメニューの最�
 
 #タグ1 #タグ2 #タグ3 #タグ4 #タグ5`;
 
-            const userQuery = `店名: ${shopName}\n食べたメニュー/調べたいこと: ${menuReq}\n補足: ${addInfo}`;
+            const userQuery = `店名: ${shopName}\n食べたメニュー/調査要望: ${menuReq}\n補足: ${addInfo}`;
 
             try {
                 const response = await fetchWithRetry(
@@ -248,10 +253,10 @@ Google検索を駆使して、店舗情報と指定されたメニューの最�
                 if (text) {
                     resultText.value = text.trim();
                 } else {
-                    throw new Error("生成に失敗しました。");
+                    throw new Error("情報の取得に失敗しました。");
                 }
             } catch (error) {
-                resultText.value = "エラー: " + error.message;
+                resultText.value = "⚠️ エラーが発生しました:\n" + error.message;
             } finally {
                 loadingArea.classList.add('hidden');
                 outputArea.classList.remove('hidden');
@@ -265,9 +270,11 @@ Google検索を駆使して、店舗情報と指定されたメニューの最�
                 try {
                     const res = await fetch(url, options);
                     if (res.ok) return res;
-                    if (res.status !== 429 && res.status < 500) {
-                        const err = await res.json();
-                        throw new Error(err.error?.message || "エラー");
+                    const errData = await res.json();
+                    if (res.status === 429 || res.status >= 500) {
+                        // Retry logic
+                    } else {
+                        throw new Error(errData.error?.message || "リクエストエラー");
                     }
                 } catch (e) {
                     if (i === retries - 1) throw e;
